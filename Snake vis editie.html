@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Offline Snake</title>
+<style>
+body{
+margin:0;
+background:#111;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:100vh;
+font-family:sans-serif;
+color:white;
+}
+
+canvas{
+background:#000;
+border:4px solid #444;
+}
+
+#controls{
+margin-top:20px;
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+
+button{
+width:80px;
+height:80px;
+font-size:28px;
+margin:6px;
+border:none;
+border-radius:12px;
+background:#333;
+color:white;
+}
+
+.row{
+display:flex;
+justify-content:center;
+}
+</style>
+</head>
+<body>
+
+<h2>Offline Snake</h2>
+<p>Snake beweegt alleen als je op een knop drukt</p>
+
+<canvas id="game" width="400" height="400"></canvas>
+
+<div id="controls">
+<div class="row">
+<button onclick="move(0,-1)">▲</button>
+</div>
+
+<div class="row">
+<button onclick="move(-1,0)">◀</button>
+<button onclick="move(0,1)">▼</button>
+<button onclick="move(1,0)">▶</button>
+</div>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const grid = 20;
+const tiles = 20;
+
+let snake = [{x:10,y:10}];
+let food = randomFood();
+
+function randomFood(){
+return {
+x: Math.floor(Math.random()*tiles),
+y: Math.floor(Math.random()*tiles)
+};
+}
+
+function move(dx,dy){
+let head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+// muur botsing
+if(head.x<0 || head.y<0 || head.x>=tiles || head.y>=tiles){
+reset();
+return;
+}
+
+// botsing met zichzelf
+for(let s of snake){
+if(s.x===head.x && s.y===head.y){
+reset();
+return;
+}
+}
+
+snake.unshift(head);
+
+if(head.x===food.x && head.y===food.y){
+food = randomFood();
+}else{
+snake.pop();
+}
+
+draw();
+}
+
+function reset(){
+snake = [{x:10,y:10}];
+food = randomFood();
+draw();
+}
+
+function draw(){
+ctx.fillStyle="black";
+ctx.fillRect(0,0,400,400);
+
+ctx.fillStyle="red";
+ctx.fillRect(food.x*grid, food.y*grid, grid, grid);
+
+ctx.fillStyle="lime";
+for(let s of snake){
+ctx.fillRect(s.x*grid, s.y*grid, grid, grid);
+}
+}
+
+draw();
+</script>
+
+</body>
+</html>

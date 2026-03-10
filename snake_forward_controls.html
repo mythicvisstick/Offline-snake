@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Snake (Forward / Left / Right)</title>
+<style>
+body{
+margin:0;
+background:#111;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:100vh;
+font-family:sans-serif;
+color:white;
+}
+
+canvas{
+background:#000;
+}
+
+#controls{
+margin-top:20px;
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+
+button{
+width:80px;
+height:70px;
+margin:6px;
+font-size:20px;
+border:none;
+border-radius:10px;
+background:#333;
+color:white;
+}
+.row{
+display:flex;
+}
+</style>
+</head>
+<body>
+
+<h2>Snake</h2>
+<p>Gebruik vooruit, links en rechts</p>
+
+<canvas id="game" width="400" height="400"></canvas>
+
+<div id="controls">
+<button onclick="forward()">⬆ vooruit</button>
+<div class="row">
+<button onclick="turnLeft()">↶ links</button>
+<button onclick="turnRight()">↷ rechts</button>
+</div>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const grid = 20;
+
+let snake = [{x:10,y:10}];
+let dir = {x:1,y:0};
+
+let food = {
+x: Math.floor(Math.random()*20),
+y: Math.floor(Math.random()*20)
+};
+
+function forward(){
+
+let head = {
+x: snake[0].x + dir.x,
+y: snake[0].y + dir.y
+};
+
+// wall collision
+if(head.x<0||head.y<0||head.x>=20||head.y>=20){
+reset();
+return;
+}
+
+// self collision
+for(let s of snake){
+if(s.x===head.x && s.y===head.y){
+reset();
+return;
+}
+}
+
+snake.unshift(head);
+
+if(head.x===food.x && head.y===food.y){
+food.x=Math.floor(Math.random()*20);
+food.y=Math.floor(Math.random()*20);
+}else{
+snake.pop();
+}
+
+draw();
+}
+
+function turnLeft(){
+let dx = dir.x;
+let dy = dir.y;
+dir.x = dy;
+dir.y = -dx;
+}
+
+function turnRight(){
+let dx = dir.x;
+let dy = dir.y;
+dir.x = -dy;
+dir.y = dx;
+}
+
+function reset(){
+snake=[{x:10,y:10}];
+dir={x:1,y:0};
+}
+
+function draw(){
+
+ctx.fillStyle="black";
+ctx.fillRect(0,0,400,400);
+
+ctx.fillStyle="red";
+ctx.fillRect(food.x*grid,food.y*grid,grid,grid);
+
+ctx.fillStyle="lime";
+for(let s of snake){
+ctx.fillRect(s.x*grid,s.y*grid,grid,grid);
+}
+}
+
+draw();
+</script>
+
+</body>
+</html>
