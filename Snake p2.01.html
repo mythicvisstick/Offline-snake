@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Snake</title>
+
+<style>
+body{
+margin:0;
+background:#111;
+color:white;
+text-align:center;
+font-family:sans-serif;
+}
+
+canvas{
+background:#000;
+display:block;
+margin:20px auto;
+}
+
+button{
+width:70px;
+height:70px;
+font-size:22px;
+margin:5px;
+}
+
+#controls{
+display:none;
+}
+
+#menu{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+}
+</style>
+</head>
+
+<body>
+
+<div id="menu">
+<h2>Kies apparaat</h2>
+<button onclick="startGame('pc')">PC</button>
+<button onclick="startGame('mobile')">Mobiel</button>
+</div>
+
+<h2>Snake</h2>
+<div id="score">Score: 0</div>
+
+<canvas id="game" width="60" height="60"></canvas>
+
+<div id="controls">
+<br>
+<button onclick="move(0,-1)">▲</button><br>
+<button onclick="move(-1,0)">◀</button>
+<button onclick="move(0,1)">▼</button>
+<button onclick="move(1,0)">▶</button>
+<br><br>
+<button onclick="resetGame()">Reset</button>
+</div>
+
+<script>
+
+let mode=null
+
+function startGame(m){
+mode=m
+document.getElementById("menu").style.display="none"
+
+if(mode=="mobile"){
+document.getElementById("controls").style.display="block"
+}
+resetGame()
+}
+
+const canvas=document.getElementById("game")
+const ctx=canvas.getContext("2d")
+
+let grid=30 // groter voor betere zichtbaarheid
+let rows=2
+canvas.width=rows*grid
+canvas.height=rows*grid
+
+let snake=[]
+let foods=[]
+let foodCount=1
+let score=0
+let dx=0
+let dy=0
+
+function resetGame(){
+rows=2
+canvas.width=rows*grid
+canvas.height=rows*grid
+snake=[[0,0]]
+foods=[[1,1]]
+foodCount=1
+score=0
+dx=0
+dy=0
+updateScore()
+draw()
+}
+
+function updateScore(){
+document.getElementById("score").innerText="Score: "+score
+}
+
+function spawnFood(){
+while(foods.length<foodCount){
+let f=[Math.floor(Math.random()*rows),Math.floor(Math.random()*rows)]
+if(!snake.some(s=>s[0]==f[0]&&s[1]==f[1]) &&
+!foods.some(a=>a[0]==f[0]&&a[1]==f[1])){
+foods.push(f)
+}
+}
+}
+
+function expandAreaIfNeeded(){
+let total=rows*rows
+let used=snake.length
+let free=(total-used)/total
+if(free<0.3){ // minder dan 30% vrije ruimte
+rows+=5
+canvas.width=rows*grid
+canvas.height=rows*grid
+foodCount=Math.floor(foodCount*2.95)
+spawnFood()
+}
+}
+
+function step(){
+if(dx==0&&dy==0)return
+let head=[snake[0][0]+dx,snake[0][1]+dy]
+if(head[0]<0)head[0]=rows-1
+if(head[1]<0)head[1]=rows-1
+if(head[0]>=rows)head[0]=0
+if(head[1]>=rows)head[1]=0
+snake.unshift(head)
+let ate=false
+foods=foods.filter(f=>{
+if(head[0]==f[0]&&head[1]==f[1]){
+ate=true
+return false
+}
+return true
+})
+if(ate){
+score++
+updateScore()
+spawnFood()
+}else{
+snake.pop()
+}
+expandAreaIfNeeded()
+draw()
+}
+
+function draw(){
+ctx.fillStyle="black"
+ctx.fillRect(0,0,canvas.width,canvas.height)
+
+ctx.fillStyle="red"
+foods.forEach(food=>{
+ctx.beginPath()
+ctx.arc(food[0]*grid+grid/2,food[1]*grid+grid/2,grid/2-1,0,Math.PI*2)
+ctx.fill()
+})
+
+ctx.fillStyle="lime"
+snake.forEach(s=>{
+let px=s[0]*grid
+let py=s[1]*grid
+let r=grid/4
+ctx.beginPath()
+ctx.moveTo(px+r,py)
+ctx.lineTo(px+grid-r,py)
+ctx.quadraticCurveTo(px+grid,py,px+grid,py+r)
+ctx.lineTo(px+grid,py+grid-r)
+ctx.quadraticCurveTo(px+grid,py+grid,px+grid-r,py+grid)
+ctx.lineTo(px+r,py+grid)
+ctx.quadraticCurveTo(px,py+grid,px,py+grid-r)
+ctx.lineTo(px,py+r)
+ctx.quadraticCurveTo(px,py,px+r,py)
+ctx.fill()
+})
+}
+
+function move(nx,ny){
+dx=nx
+dy=ny
+step()
+}
+
+document.addEventListener("keydown",e=>{
+if(mode!="pc")return
+if(e.key=="ArrowUp"||e.key=="w")move(0,-1)
+if(e.key=="ArrowDown"||e.key=="s")move(0,1)
+if(e.key=="ArrowLeft"||e.key=="a")move(-1,0)
+if(e.key=="ArrowRight"||e.key=="d")move(1,0)
+if(e.key=="r"||e.key=="Escape"||e.key=="e")resetGame()
+})
+
+let touchStartX=0
+let touchStartY=0
+
+canvas.addEventListener("touchstart",e=>{
+touchStartX=e.touches[0].clientX
+touchStartY=e.touches[0].clientY
+})
+
+canvas.addEventListener("touchend",e=>{
+let dxTouch=e.changedTouches[0].clientX-touchStartX
+let dyTouch=e.changedTouches[0].clientY-touchStartY
+if(Math.abs(dxTouch)>Math.abs(dyTouch)){
+if(dxTouch>0)move(1,0)
+else move(-1,0)
+}else{
+if(dyTouch>0)move(0,1)
+else move(0,-1)
+}
+})
+
+draw()
+updateScore()
+</script>
+
+</body>
+</html>
